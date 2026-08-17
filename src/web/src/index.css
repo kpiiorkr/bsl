@@ -1,0 +1,23 @@
+:root {
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(224, 107, 69, 0.13), transparent 36rem),
+    radial-gradient(circle at 100% 10%, rgba(79, 70, 165, 0.16), transparent 38rem),
+    #f7f5ff;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
