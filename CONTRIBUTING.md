@@ -21,7 +21,7 @@
 프론트엔드 설정 및 검사:
 
 ```sh
-cd frontend
+cd src/web
 npm install
 npm run build
 npm test
@@ -30,7 +30,7 @@ npm test
 백엔드 설정 및 검사:
 
 ```sh
-cd backend
+cd src/api
 python -m venv .venv
 # 사용 중인 셸에서 .venv를 활성화한 후 실행합니다.
 python -m pip install -e ".[dev]"
