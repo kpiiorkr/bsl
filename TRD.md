@@ -3,7 +3,7 @@
 | 메타데이터 | 값 |
 | --- | --- |
 | 문서 ID | TRD-BSL-001 |
-| 버전 | 1.0 |
+| 버전 | 1.1 |
 | 상태 | 승인됨 |
 | 작성자 | 프로젝트 팀 |
 | 기술 책임자 | 프로젝트 소유자 |
@@ -23,6 +23,7 @@
 | 0.1 | 2026-08-17 | 프로젝트 팀 | 승인된 PRD 1.0 기반 최초 기술 설계 |
 | 0.2 | 2026-08-17 | 프로젝트 팀 | 내부 OpenAPI Payload와 테스트 프레임워크 구체화 |
 | 1.0 | 2026-08-17 | 프로젝트 팀 | 기술 설계 검토 및 승인 |
+| 1.1 | 2026-08-17 | 프로젝트 팀 | Python 패키지 관리와 백엔드 실행 도구로 uv 채택 |
 
 ## 1. 문서 목적
 
@@ -53,6 +54,7 @@
 | UI | Material UI, MUI X Date Pickers | Material Design 3 기반 컴포넌트와 날짜 선택 |
 | 프론트엔드 테스트 | Vitest, React Testing Library, Mock Service Worker | 백엔드 경계를 포함한 컴포넌트 통합 테스트 |
 | 백엔드 | Python, FastAPI, Pydantic | 내부 REST API와 요청·응답 검증 |
+| Python 도구 | uv | Python 버전, 의존성, 잠금 파일 및 백엔드 명령 실행 관리 |
 | 외부 HTTP | HTTPX | 비동기 NEIS API 클라이언트 |
 | 백엔드 테스트 | pytest, pytest-asyncio, RESPX | 비동기 단위 테스트와 NEIS HTTP 모의 |
 | 계약 테스트 | openapi-spec-validator, Schemathesis | OpenAPI 문서와 실제 백엔드 응답 검증 |
@@ -118,7 +120,8 @@ flowchart LR
 │   │   │   └── main.py
 │   │   ├── tests/
 │   │   ├── Dockerfile
-│   │   └── pyproject.toml
+│   │   ├── pyproject.toml
+│   │   └── uv.lock
 │   ├── e2e/
 │   └── openapi.json
 ├── data/
@@ -443,6 +446,28 @@ HTTPX 클라이언트에는 명시적인 연결 및 응답 타임아웃을 설�
 시작 시 필수 구성을 검증하고 누락된 경우 명확한 오류로 종료한다.
 `.env.example`에는 실제 비밀값이 아닌 변수명과 예시만 기록한다.
 
+### 9.3 Python 패키지 관리와 실행
+
+백엔드의 Python 버전, 가상 환경, 의존성 및 잠금 파일은 `uv`로 관리한다.
+의존성 선언과 잠금 파일은 각각 `src/api/pyproject.toml`과
+`src/api/uv.lock`을 단일 기준으로 사용하며 두 파일을 함께 커밋한다.
+직접 `pip install`하거나 별도의 `requirements.txt`를 병행하지 않는다.
+
+다음 명령은 `src/api`에서 실행한다.
+
+| 목적 | 명령 |
+| --- | --- |
+| 개발 의존성 설치 | `uv sync --locked` |
+| 개발 서버 실행 | `uv run fastapi dev app/main.py` |
+| 운영 서버 실행 | `uv run fastapi run app/main.py` |
+| 백엔드 테스트 | `uv run pytest` |
+
+의존성을 변경할 때는 `uv add`, `uv remove` 및 필요한 경우
+`uv add --dev`를 사용해 `pyproject.toml`과 `uv.lock`을 함께 갱신한다. CI와
+재현 가능한 빌드에서는 `uv sync --locked`를 사용해 잠금 파일과 선언이
+일치하지 않으면 실패하도록 한다. 모든 백엔드 명령은 `uv run`으로 실행해
+프로젝트 가상 환경의 도구와 의존성을 사용한다.
+
 ## 10. Docker Compose
 
 `compose.yaml`은 다음 서비스를 정의한다.
@@ -453,6 +478,10 @@ HTTPX 클라이언트에는 명시적인 연결 및 응답 타임아웃을 설�
 | `frontend` | 빌드된 React 앱 제공 | `/api` 요청을 backend로 프록시하거나 설정된 내부 API URL 사용 |
 
 - 각 서비스는 별도 다단계 Dockerfile로 빌드한다.
+- backend 빌드 단계는 `pyproject.toml`과 `uv.lock`을 먼저 복사하고
+  `uv sync --locked --no-dev`로 운영 의존성을 설치한다.
+- backend 컨테이너는 `uv run fastapi run app/main.py`로 애플리케이션을
+  실행한다.
 - 런타임 이미지는 비루트 사용자로 실행한다.
 - 프론트엔드는 backend 헬스 체크 성공 후 정상적인 API 통신이 가능해야 한다.
 - `docker compose up --build` 한 번으로 전체 앱을 실행할 수 있어야 한다.
