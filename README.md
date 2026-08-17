@@ -54,7 +54,20 @@ NEIS 공개 API를 활용해 초중고 급식 메뉴를 조회하고 AI 에이�
 | `data/` | API 명세 작성에 사용하는 원본 데이터 |
 | `docs/` | 단계별 워크숍 가이드                 |
 
-프론트엔드, 백엔드 및 배포 관련 소스는 워크숍을 진행하면서 참가자의 저장소에 생성됩니다.
+애플리케이션 코드는 `src/web`, `src/api`, `src/e2e`에 있으며 프론트엔드와
+백엔드의 계약은 `src/openapi.json`에서 관리합니다.
+
+## 애플리케이션 실행
+
+1. `.env.example`을 `.env`로 복사하고 `NEIS_API_KEY`에 발급받은 키를
+   입력합니다.
+2. `docker compose up --build`를 실행합니다.
+3. 브라우저에서 <http://localhost:8080>을 엽니다.
+
+로컬 검사는 프론트엔드의 경우 `src/web`에서 `npm ci`, `npm run build`,
+`npm test`를 실행하고, 백엔드는 `src/api`에서 `uv sync --locked`,
+`uv run pytest`를 실행합니다. E2E 검사는 두 앱을 빌드한 뒤 `src/e2e`에서
+`npm ci`, `npx playwright install chromium`, `npm test` 순서로 실행합니다.
 
 ## 추가 학습 자료
 

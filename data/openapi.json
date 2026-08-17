@@ -1,0 +1,137 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "NEIS 학교기본정보 및 급식식단정보 API",
+    "version": "1.0.0",
+    "description": "원본 xlsx 명세에서 급식 배틀이 사용하는 두 API를 OpenAPI 3.1로 정리한 계약"
+  },
+  "servers": [{"url": "https://open.neis.go.kr/hub"}],
+  "paths": {
+    "/schoolInfo": {
+      "get": {
+        "operationId": "getSchoolInfo",
+        "parameters": [
+          {"$ref": "#/components/parameters/Key"}, {"$ref": "#/components/parameters/Type"},
+          {"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/PageSize"},
+          {"name": "ATPT_OFCDC_SC_CODE", "in": "query", "schema": {"type": "string"}},
+          {"name": "SD_SCHUL_CODE", "in": "query", "schema": {"type": "string"}},
+          {"name": "SCHUL_NM", "in": "query", "schema": {"type": "string"}},
+          {"name": "SCHUL_KND_SC_NM", "in": "query", "schema": {"type": "string"}},
+          {"name": "LCTN_SC_NM", "in": "query", "schema": {"type": "string"}},
+          {"name": "FOND_SC_NM", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "NEIS 학교 정보 응답", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SchoolInfoEnvelope"}}}}}
+      }
+    },
+    "/mealServiceDietInfo": {
+      "get": {
+        "operationId": "getMealServiceDietInfo",
+        "parameters": [
+          {"$ref": "#/components/parameters/Key"}, {"$ref": "#/components/parameters/Type"},
+          {"$ref": "#/components/parameters/Page"}, {"$ref": "#/components/parameters/PageSize"},
+          {"name": "ATPT_OFCDC_SC_CODE", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "SD_SCHUL_CODE", "in": "query", "required": true, "schema": {"type": "string"}},
+          {"name": "MMEAL_SC_CODE", "in": "query", "schema": {"type": "string", "description": "1 조식, 2 중식, 3 석식"}},
+          {"name": "MLSV_YMD", "in": "query", "schema": {"type": "string", "pattern": "^\\d{8}$"}},
+          {"name": "MLSV_FROM_YMD", "in": "query", "schema": {"type": "string", "pattern": "^\\d{8}$"}},
+          {"name": "MLSV_TO_YMD", "in": "query", "schema": {"type": "string", "pattern": "^\\d{8}$"}}
+        ],
+        "responses": {"200": {"description": "NEIS 급식 정보 응답", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/MealInfoEnvelope"}}}}}
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "Key": {"name": "KEY", "in": "query", "required": true, "schema": {"type": "string"}, "description": "인증키"},
+      "Type": {"name": "Type", "in": "query", "required": true, "schema": {"type": "string", "enum": ["json", "xml"], "default": "json"}},
+      "Page": {"name": "pIndex", "in": "query", "required": true, "schema": {"type": "integer", "minimum": 1, "default": 1}},
+      "PageSize": {"name": "pSize", "in": "query", "required": true, "schema": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 100}}
+    },
+    "schemas": {
+      "Result": {
+        "type": "object", "required": ["CODE", "MESSAGE"],
+        "properties": {"CODE": {"type": "string"}, "MESSAGE": {"type": "string"}}
+      },
+      "Head": {
+        "type": "array", "items": {"anyOf": [
+          {"type": "object", "required": ["list_total_count"], "properties": {"list_total_count": {"type": "integer"}}},
+          {"type": "object", "required": ["RESULT"], "properties": {"RESULT": {"$ref": "#/components/schemas/Result"}}}
+        ]}
+      },
+      "SchoolRow": {
+        "type": "object",
+        "required": ["ATPT_OFCDC_SC_CODE", "SD_SCHUL_CODE", "SCHUL_NM"],
+        "properties": {
+          "ATPT_OFCDC_SC_CODE": {"type": "string"}, "ATPT_OFCDC_SC_NM": {"type": "string"},
+          "SD_SCHUL_CODE": {"type": "string"}, "SCHUL_NM": {"type": "string"},
+          "ENG_SCHUL_NM": {"type": ["string", "null"]}, "SCHUL_KND_SC_NM": {"type": ["string", "null"]},
+          "LCTN_SC_NM": {"type": ["string", "null"]}, "JU_ORG_NM": {"type": ["string", "null"]},
+          "FOND_SC_NM": {"type": ["string", "null"]}, "ORG_RDNMA": {"type": ["string", "null"]},
+          "ORG_RDNZC": {"type": ["string", "null"]},
+          "ORG_RDNDA": {"type": ["string", "null"]}, "ORG_TELNO": {"type": ["string", "null"]},
+          "HMPG_ADRES": {"type": ["string", "null"]}, "COEDU_SC_NM": {"type": ["string", "null"]},
+          "ORG_FAXNO": {"type": ["string", "null"]}, "HS_SC_NM": {"type": ["string", "null"]},
+          "INDST_SPECL_CCCCL_EXST_YN": {"type": ["string", "null"]}, "HS_GNRL_BUSNS_SC_NM": {"type": ["string", "null"]},
+          "SPCLY_PURPS_HS_ORD_NM": {"type": ["string", "null"]}, "ENE_BFE_SEHF_SC_NM": {"type": ["string", "null"]},
+          "DGHT_SC_NM": {"type": ["string", "null"]}, "FOND_YMD": {"type": ["string", "null"]},
+          "FOAS_MEMRD": {"type": ["string", "null"]}, "LOAD_DTM": {"type": ["string", "null"]}
+        }
+      },
+      "MealRow": {
+        "type": "object",
+        "required": ["ATPT_OFCDC_SC_CODE", "SD_SCHUL_CODE", "SCHUL_NM", "MMEAL_SC_CODE", "MMEAL_SC_NM", "MLSV_YMD", "DDISH_NM"],
+        "properties": {
+          "ATPT_OFCDC_SC_CODE": {"type": "string"}, "ATPT_OFCDC_SC_NM": {"type": "string"},
+          "SD_SCHUL_CODE": {"type": "string"}, "SCHUL_NM": {"type": "string"},
+          "MMEAL_SC_CODE": {"type": "string"}, "MMEAL_SC_NM": {"type": "string"},
+          "MLSV_YMD": {"type": "string", "pattern": "^\\d{8}$"}, "MLSV_FGR": {"type": ["number", "string", "null"]},
+          "DDISH_NM": {"type": "string"}, "ORPLC_INFO": {"type": ["string", "null"]},
+          "CAL_INFO": {"type": ["string", "null"]}, "NTR_INFO": {"type": ["string", "null"]},
+          "LOAD_DTM": {"type": ["string", "null"]}
+        }
+      },
+      "SchoolInfoEnvelope": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["schoolInfo"],
+            "properties": {
+              "schoolInfo": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "head": {"$ref": "#/components/schemas/Head"},
+                    "row": {"type": "array", "items": {"$ref": "#/components/schemas/SchoolRow"}}
+                  }
+                }
+              }
+            }
+          },
+          {"type": "object", "required": ["RESULT"], "properties": {"RESULT": {"$ref": "#/components/schemas/Result"}}}
+        ]
+      },
+      "MealInfoEnvelope": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["mealServiceDietInfo"],
+            "properties": {
+              "mealServiceDietInfo": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "head": {"$ref": "#/components/schemas/Head"},
+                    "row": {"type": "array", "items": {"$ref": "#/components/schemas/MealRow"}}
+                  }
+                }
+              }
+            }
+          },
+          {"type": "object", "required": ["RESULT"], "properties": {"RESULT": {"$ref": "#/components/schemas/Result"}}}
+        ]
+      }
+    }
+  }
+}

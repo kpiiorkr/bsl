@@ -22,7 +22,7 @@
 
 ```sh
 cd src/web
-npm install
+npm ci
 npm run build
 npm test
 ```
@@ -31,10 +31,17 @@ npm test
 
 ```sh
 cd src/api
-python -m venv .venv
-# 사용 중인 셸에서 .venv를 활성화한 후 실행합니다.
-python -m pip install -e ".[dev]"
-pytest
+uv sync --locked
+uv run pytest
+```
+
+E2E 설정 및 검사:
+
+```sh
+cd src/e2e
+npm ci
+npx playwright install chromium
+npm test
 ```
 
 전체 애플리케이션 실행:
