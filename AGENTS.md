@@ -10,6 +10,33 @@
   프론트엔드, 백엔드, 배포 코드는 단계적으로 추가될 수 있습니다.
 - 요청된 변경 범위 안에서만 작업하고 관련 없는 코드, 문서, 설정은 변경하지
   않습니다.
+- 제품 요구사항은 승인된 `PRD.md` 1.0, 기술 설계는 승인된 `TRD.md` 1.0을
+  기준으로 합니다. 두 문서와 구현이 충돌하면 임의로 해석하지 말고 변경
+  요청의 범위를 확인합니다.
+
+## 애플리케이션 구조
+
+- 실행 코드와 테스트 코드는 모두 `src/` 아래에 둡니다.
+- React 프론트엔드는 `src/web`, FastAPI 백엔드는 `src/api`, Playwright E2E
+  테스트는 `src/e2e`에 둡니다.
+- 프론트엔드와 백엔드 사이의 OpenAPI 3.1 계약은 `src/openapi.json`에서
+  관리합니다.
+- NEIS 외부 API 계약은 `data/openapi.json`을 기준으로 합니다. 이 파일이
+  없다면 앱 구현 전에 `data/`의 원본 API 명세로부터 생성하고 검토하되 원본
+  스프레드시트를 직접 수정하지 않습니다.
+- Dockerfile은 각 앱 디렉터리에 두고 전체 실행 구성은 루트의 `compose.yaml`에
+  둡니다.
+
+## API 경계
+
+- 프론트엔드는 NEIS API를 직접 호출하지 않고 `src/openapi.json`에 정의된
+  백엔드 API만 호출합니다.
+- NEIS API 키는 백엔드 환경 변수로만 주입하고 프론트엔드 번들, 응답, 로그
+  또는 저장소에 포함하지 않습니다.
+- 백엔드는 NEIS 응답과 결과 코드를 검증하고 내부 도메인 모델로 정규화한 뒤
+  프론트엔드에 반환합니다. 외부 장애를 빈 결과로 처리하지 않습니다.
+- 내부 API의 JSON 속성명, 날짜 형식, 오류 Payload 및 상태 코드는
+  `src/openapi.json`과 일치해야 합니다.
 
 ## 일반 작업 지침
 
@@ -27,6 +54,8 @@
 
 ## Python 가이드라인
 
+- 백엔드는 FastAPI, Pydantic 및 HTTPX를 사용하며 API 라우터, 서비스, NEIS
+  클라이언트 및 모델의 책임을 분리합니다.
 - Python 코드는 [PEP 8](https://peps.python.org/pep-0008/)을 기본 스타일
   가이드로 따르되, 저장소에 구성된 포맷터와 린터 규칙이 있으면 이를 우선합니다.
 - 공개 함수, 메서드 및 데이터 구조에는 구체적인 타입을 사용하고 불필요한
@@ -43,6 +72,9 @@
 
 ## TypeScript 가이드라인
 
+- 프론트엔드는 React, TypeScript, Vite, Material UI 및 MUI X Date Pickers를
+  사용합니다. 시작일과 종료일에는 유료 기능이 필요 없는 Date Picker를 각각
+  사용합니다.
 - TypeScript 코드는 적용 가능한 범위에서
   [Mozilla 코딩 스타일 가이드](https://firefox-source-docs.mozilla.org/code-quality/coding-style/index.html)를
   따르되, 저장소의 기존 스타일과 포맷터 및 린터 설정을 우선합니다.
@@ -59,6 +91,14 @@
 
 ## 테스트 및 유효성 검사
 
+- 프론트엔드는 Vitest, React Testing Library 및 Mock Service Worker를
+  사용한 통합 테스트만 작성하고 별도의 단위 테스트 계층은 만들지 않습니다.
+- 백엔드는 pytest와 pytest-asyncio로 단위·통합 테스트를 작성하고 RESPX로
+  NEIS HTTP 호출을 모의합니다.
+- `src/openapi.json`은 openapi-spec-validator로 검사하고 Schemathesis로
+  구현 응답과의 계약을 검증합니다.
+- 전체 사용자 흐름은 `src/e2e`에서 Playwright로 검증합니다. CI 테스트가
+  실제 NEIS 서비스의 가용성에 의존하지 않게 결정적인 모의 응답을 사용합니다.
 - 변경된 동작에는 정상 경로와 중요한 실패 경로를 다루는 테스트를 추가하거나
   수정합니다.
 - 가장 작고 관련성 높은 검사부터 실행하며, 필요할 때만 검사 범위를 넓힙니다.
